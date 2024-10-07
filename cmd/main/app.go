@@ -34,6 +34,8 @@ func main() {
 	router.Use(middleware.URLFormat)
 
 	router.Post("/register/", handlers.RegisterUser(log, storage))
+	router.Post("/login/", handlers.LoginUser(log, storage))
+
 
 	server := http.Server{
 		Addr: cfg.HTTPServer.Address,

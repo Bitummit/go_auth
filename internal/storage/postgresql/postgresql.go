@@ -69,13 +69,12 @@ func (s *Storage) CreateUser(ctx context.Context, user storage.User) (int64, err
 // }
 
 
-func (s *Storage) GetUser(ctx context.Context, id int, username string) (*storage.User, error) {
+func (s *Storage) GetUser(ctx context.Context, username string) (*storage.User, error) {
 	stmt := `
-		SELECT * from user where id=@id, username=@username;
+		SELECT * from my_user where username=@username;
 	`
 	
 	args := pgx.NamedArgs{
-		"id": id,
 		"username": username,
 	}
 

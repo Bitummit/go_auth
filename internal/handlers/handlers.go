@@ -61,3 +61,53 @@ func RegisterUser(log *slog.Logger, queryTool storage.QueryFunctions) http.Handl
 		render.JSON(w, r, RegisterUserResponse{Response: handler.OK(), Token: token})
 	}
 }
+
+type LoginUserResponse struct {
+	Response handler.Response
+	Token string `json:"token,omitempty"`
+}
+
+type LoginUserRequest struct{
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+
+func LoginUser(log *slog.Logger, queryTool storage.QueryFunctions) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req LoginUserRequest
+
+		err := render.DecodeJSON(r.Body, &req)
+		if err != nil {
+			log.Error("Cannot decode body", logger.Err(err))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("internal error"))
+			return
+		}
+
+		user, err := queryTool.GetUser(context.Background(), req.Username)
+		if err != nil {
+			log.Error("Error inserting user", logger.Err(err))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("Login or password incorrect"))
+			return
+		}
+
+		err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password)); if err != nil {
+			log.Error("Error on hashing password")
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("Login or password incorrect"))
+			return
+		}
+
+		token, err := utils.NewToken(*user)
+		if err != nil {
+			log.Error("Error creating token", logger.Err(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			render.JSON(w, r, handler.Error("internal error"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		render.JSON(w, r, RegisterUserResponse{Response: handler.OK(), Token: token})
+	}
+}

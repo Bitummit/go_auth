@@ -17,4 +17,5 @@ type Token struct {
 
 type QueryFunctions interface {
 	CreateUser(context.Context, User) (int64, error)
+	GetUser(context.Context, string) (*User, error)
 }
