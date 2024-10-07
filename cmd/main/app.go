@@ -35,6 +35,7 @@ func main() {
 
 	router.Post("/register/", handlers.RegisterUser(log, storage))
 	router.Post("/login/", handlers.LoginUser(log, storage))
+	router.Post("/token/", handlers.CheckToken(log, storage))
 
 
 	server := http.Server{

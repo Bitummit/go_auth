@@ -111,3 +111,43 @@ func LoginUser(log *slog.Logger, queryTool storage.QueryFunctions) http.HandlerF
 		render.JSON(w, r, RegisterUserResponse{Response: handler.OK(), Token: token})
 	}
 }
+
+type CheckTokenResponse struct {
+	Response handler.Response
+}
+
+type CheckTokenRequest struct{
+	Token string `json:"token"`
+}
+
+func CheckToken(log *slog.Logger, queryTool storage.QueryFunctions) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req CheckTokenRequest
+
+		err := render.DecodeJSON(r.Body, &req)
+		if err != nil {
+			log.Error("Cannot decode body", logger.Err(err))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("internal error"))
+			return
+		}
+		user, err := utils.ParseToken(req.Token)
+		if err != nil {
+			log.Error("Error token", logger.Err(err))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("invalid token"))
+			return
+		}
+		_, err = queryTool.GetUser(context.Background(), user.Username)
+		if err != nil {
+			log.Error("No such user", logger.Err(err))
+			w.WriteHeader(http.StatusBadRequest)
+			render.JSON(w, r, handler.Error("No such user"))
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		render.JSON(w, r, handler.OK())
+
+	}
+}
