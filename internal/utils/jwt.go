@@ -19,7 +19,7 @@ type UserClaims struct {
 
 func (u UserClaims) Valid() error {
 	if u.ExpiresAt < time.Now().Unix() {
-		return errors.New("Token expired")
+		return errors.New("token expired")
 	}
 	return nil
 }
@@ -36,11 +36,6 @@ func NewToken(user storage.User) (string, error) {
 		Username: user.Username,
 		ExpiresAt: time.Now().Add(duration).Unix(),
 	})
-	
-	// claims := token.Claims.(jwt.MapClaims)
-	// claims["id"] = user.Id
-	// claims["username"] = user.Username
-	// claims["exp"] = time.Now().Add(duration).Unix()
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
@@ -70,4 +65,4 @@ func ParseToken(tokenString string) (storage.User, error) {
 }
 
 
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6NSwiVXNlcm5hbWUiOiJQZXJ0YXlhIiwiRXhwaXJlc0F0IjoxNzI4MzQwNzM5fQ.z5SM4d_vAXcQ75kQSaC_DNYYDdsqL_fqRsUYq8WWQPM
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6MSwiVXNlcm5hbWUiOiJQZXJ0YXlhIiwiRXhwaXJlc0F0IjoxNzI4MzgzMzc5fQ.N1Vnsx0GHL6azLXeVfZwi3ik7W3dpBeTeKgv3nWlgkM

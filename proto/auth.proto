@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option go_package = "auth/pkg/auth_v1";
+
+// import "google/protobuf/struct.proto";
+
+message FullUserInformation {
+    uint64 id       = 1 [ json_name = "id" ];
+    string username = 2 [ json_name = "username" ];
+    string password = 3 [ json_name = "password" ];
+}
+
+message BaseUserInformation {
+    string username = 1 [ json_name = "username" ];
+    string password = 2 [ json_name = "password" ];
+}
+
+message Token {
+    Response response = 1;
+    string token = 2 [ json_name = "token"];
+}
+
+message Response {
+    string status = 1 [ json_name = "token"];
+}
+
+service Auth {
+    rpc Login(BaseUserInformation) returns (Token) {}
+    rpc Register(BaseUserInformation) returns (Token) {}
+    rpc CheckToken(Token) returns (Response) {}
+}
+
+// message NullableString {
+//     oneof kind {
+//       google.protobuf.NullValue null = 1;
+//       string data = 2;
+//     }
+// }
