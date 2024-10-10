@@ -53,31 +53,22 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_v1.BaseUserInformation
 	user, err := a.Storage.GetUser(context.Background(), req.GetUsername())
 	if err != nil {
 		a.Log.Error("Error inserting user", logger.Err(err))
-		response := auth_v1.Token{
-			Response: handler.Error(),
-			Token: "",
-		}
-		return &response, fmt.Errorf("Error while fething data")
+		
+		return nil, fmt.Errorf("Error while fething data")
 	}
-
+	// --- This to service ---
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password)); if err != nil {
 		a.Log.Error("Error on hashing password")
-		response := auth_v1.Token{
-			Response: handler.Error(),
-			Token: "",
-		}
-		return &response, fmt.Errorf("Error while hashing password")
+		
+		return nil, fmt.Errorf("Wrong password")
 	}
 
 	token, err := utils.NewToken(*user)
 	if err != nil {
 		a.Log.Error("Error creating token", logger.Err(err))
-		response := auth_v1.Token{
-			Response: handler.Error(),
-			Token: "",
-		}
-		return &response, fmt.Errorf("Error while generating token")
+		return nil, fmt.Errorf("Error while generating token")
 	}
+	// --- This to service ---
 	response := auth_v1.Token{
 		Response: handler.OK(),
 		Token: token,
