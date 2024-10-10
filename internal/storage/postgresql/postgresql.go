@@ -1,7 +1,7 @@
 package postgresql
 
 import (
-	"auth/internal/storage"
+	"github.com/Bitummit/go_auth/internal/storage"
 	"context"
 	"os"
 	"time"
