@@ -1,5 +1,7 @@
 package handler
 
+import auth_v1 "github.com/Bitummit/go_auth/pkg/auth_v1/proto"
+
 
 type Response struct {
 	Status string `json:"status"`
@@ -7,15 +9,14 @@ type Response struct {
 }
 
 
-func OK() Response {
-	return Response{
+func OK() *auth_v1.Response {
+	return &auth_v1.Response{
 		Status: "OK",
 	}
 }
 
-func Error(msg string) Response {
-	return Response{
+func Error() *auth_v1.Response {
+	return &auth_v1.Response{
 		Status: "Error",
-		Error: msg,
 	}
 }

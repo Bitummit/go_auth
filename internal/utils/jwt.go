@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"auth/internal/storage"
+	"github.com/Bitummit/go_auth/internal/storage"
 	"errors"
 	"os"
 	"time"

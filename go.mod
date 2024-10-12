@@ -1,4 +1,4 @@
-module auth
+module github.com/Bitummit/go_auth
 
 go 1.23.1
 
