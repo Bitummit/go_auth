@@ -2,6 +2,7 @@ module github.com/Bitummit/go_auth
 
 go 1.23.1
 
+
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
