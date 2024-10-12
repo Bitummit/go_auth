@@ -1,5 +1,10 @@
 env: "dev"
 http_server:
-  address: "0.0.0.0:8001"
+  http_address: "0.0.0.0:8001"
+  timeout: 5s
+  idle_timeout: 60s
+
+grpc_server:
+  grpc_address: "0.0.0.0:5300"
   timeout: 5s
   idle_timeout: 60s

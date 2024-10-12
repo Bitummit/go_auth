@@ -32,7 +32,7 @@ func StartGrpcServer(log *slog.Logger, storage storage.QueryFunctions, cfg *conf
 		Log: log,
 	}
 	server.Log.Info("starting server ...")
-	listener, err := net.Listen("tcp", ":5300")
+	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
     if err != nil {
         server.Log.Error("failed to listen", logger.Err(err))
     }
