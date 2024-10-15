@@ -6,13 +6,11 @@ import (
 	"log/slog"
 	"net"
 
+	"github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage"
-	"github.com/Bitummit/go_auth/internal/utils"
 	auth_v1 "github.com/Bitummit/go_auth/pkg/auth_v1/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
-	"github.com/Bitummit/go_auth/pkg/handler"
 	"github.com/Bitummit/go_auth/pkg/logger"
-	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 )
 
@@ -49,29 +47,47 @@ func StartGrpcServer(log *slog.Logger, storage storage.QueryFunctions, cfg *conf
 	return nil
 }
 
-func (a *AuthServer) Login(ctx context.Context, req *auth_v1.BaseUserInformation) (*auth_v1.Token, error) {
-	user, err := a.Storage.GetUser(context.Background(), req.GetUsername())
-	if err != nil {
-		a.Log.Error("Error inserting user", logger.Err(err))
-		
-		return nil, fmt.Errorf("Error while fething data")
-	}
-	// --- This to service ---
-	err = bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password)); if err != nil {
-		a.Log.Error("Error on hashing password")
-		
-		return nil, fmt.Errorf("Wrong password")
+
+func (a *AuthServer) CheckToken(ctx context.Context, req *auth_v1.Token) (*auth_v1.Response, error) {
+
+	ok, err := service.CheckTokenUserService(a.Storage, req.GetToken())
+	if err != nil || !ok {
+		a.Log.Error("error while login:", logger.Err(err))
+		return nil, fmt.Errorf("error in login: %v", err)
 	}
 
-	token, err := utils.NewToken(*user)
-	if err != nil {
-		a.Log.Error("Error creating token", logger.Err(err))
-		return nil, fmt.Errorf("Error while generating token")
+	response := auth_v1.Response{
+		Status: "OK",
 	}
-	// --- This to service ---
+	return &response, nil
+}
+
+
+func (a *AuthServer) Login(ctx context.Context, req *auth_v1.BaseUserInformation) (*auth_v1.Token, error) {
+
+	token, err := service.LoginUserService(a.Storage, req.GetUsername(), req.GetPassword())
+	if err != nil {
+		a.Log.Error("error while login:", logger.Err(err))
+		return nil, fmt.Errorf("error in login: %v", err)
+	}
+
 	response := auth_v1.Token{
-		Response: handler.OK(),
-		Token: token,
+		Token: *token,
+	}
+	return &response, nil
+}
+
+
+func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_v1.BaseUserInformation) (*auth_v1.Token, error)  {
+
+	token, err := service.RegisterUserService(a.Storage, req.GetUsername(), req.GetPassword())
+	if err != nil {
+		a.Log.Error("error while register user:", logger.Err(err))
+		return nil, fmt.Errorf("error in login: %v", err)
+	}
+
+	response := auth_v1.Token{
+		Token: *token,
 	}
 	return &response, nil
 }
