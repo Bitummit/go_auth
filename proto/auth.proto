@@ -16,12 +16,11 @@ message BaseUserInformation {
 }
 
 message Token {
-    Response response = 1;
     string token = 2 [ json_name = "token"];
 }
 
 message Response {
-    string status = 1 [ json_name = "token"];
+    string status = 1 [ json_name = "status"];
 }
 
 service Auth {

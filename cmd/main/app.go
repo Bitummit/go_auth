@@ -24,8 +24,6 @@ func main() {
 		log.Error("Error connecting to DB", logger.Err(err))
 	}
 
-	
-
 	if err := grpc.StartGrpcServer(log, storage, cfg); err != nil {
 		log.Error("Server error! Disconnecting ...")
 	}
