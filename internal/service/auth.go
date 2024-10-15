@@ -29,16 +29,19 @@ func CheckTokenUserService(queryTool storage.QueryFunctions, token string) (bool
 func LoginUserService(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
 	user, err := queryTool.GetUser(context.Background(), username)
 	if err != nil {
-		return nil, fmt.Errorf("error while fething data %v", err)
+		// return nil, fmt.Errorf("error while fething data %v", err)
+		return nil, err
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password)); if err != nil {
-		return nil, fmt.Errorf("wrong password %v", err)
+		// return nil, fmt.Errorf("wrong password %v", err)
+		return nil, err
 	}
 
 	token, err := utils.NewToken(*user)
 	if err != nil {
-		return nil, fmt.Errorf("error while generating token %v", err)
+		// return nil, fmt.Errorf("error while generating token %v", err)
+		return nil, err
 	}
 	return &token, nil
 }
