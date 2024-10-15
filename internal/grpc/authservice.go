@@ -68,7 +68,7 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_v1.BaseUserInformation
 	token, err := service.LoginUserService(a.Storage, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
-		return nil, fmt.Errorf("error in login: %v", err)
+		return nil, err
 	}
 
 	response := auth_v1.Token{
