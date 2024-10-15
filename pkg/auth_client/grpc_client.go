@@ -68,6 +68,7 @@ func (a *AuthClient) Login(username string, password string) auth_v1.Token {
 }
 
 
+
 func (a *AuthClient) Register(username string, password string) auth_v1.Token {
 	request := &auth_v1.BaseUserInformation {
 		Username: username,
