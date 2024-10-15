@@ -74,7 +74,12 @@ func (a *AuthClient) Login(username string, password string) (*auth_v1.Token, er
 }
 
 
+<<<<<<< HEAD
 func (a *AuthClient) Register(username string, password string) (*auth_v1.Token, error) {
+=======
+
+func (a *AuthClient) Register(username string, password string) auth_v1.Token {
+>>>>>>> 8ff6d4c6d43e8a9bf361aaab0031dcb5905aca17
 	request := &auth_v1.BaseUserInformation {
 		Username: username,
 		Password: password,
