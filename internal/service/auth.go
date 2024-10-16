@@ -5,20 +5,29 @@ import (
 	"fmt"
 
 	"github.com/Bitummit/go_auth/internal/models"
-	"github.com/Bitummit/go_auth/internal/storage"
 	"github.com/Bitummit/go_auth/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 
-func CheckTokenUser(queryTool storage.QueryFunctions, token string) (bool, error) {
+type UserStorage interface {
+	CreateUser(context.Context, models.User) (int64, error)
+	GetUser(context.Context, string) (*models.User, error)
+}
+
+type AuthService struct {
+	storage UserStorage
+}
+
+
+func (a *AuthService)CheckTokenUser(token string) (bool, error) {
 	
 	user, err := utils.ParseToken(token)
 	if err != nil {
 		return false, fmt.Errorf("wrong token %v", err)
 	}
 	
-	_, err = queryTool.GetUser(context.Background(), user.Username)
+	_, err = a.storage.GetUser(context.Background(), user.Username)
 	if err != nil {
 		return false, fmt.Errorf("no such user %v", err)
 	}
@@ -27,8 +36,8 @@ func CheckTokenUser(queryTool storage.QueryFunctions, token string) (bool, error
 }
 
 
-func LoginUser(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
-	user, err := queryTool.GetUser(context.Background(), username)
+func (a *AuthService)LoginUser(username string, password string) (*string, error) {
+	user, err := a.storage.GetUser(context.Background(), username)
 	if err != nil {
 		// return nil, fmt.Errorf("error while fething data %v", err)
 		return nil, err
@@ -48,14 +57,14 @@ func LoginUser(queryTool storage.QueryFunctions, username string, password strin
 }
 
 
-func RegisterUser(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
+func (a *AuthService)RegisterUser(username string, password string) (*string, error) {
 	
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("error while hashing password %v", err)
 	}
 	user := models.User{Username: username, Password: hashedPass}
-	id, err := queryTool.CreateUser(context.Background(), user)
+	id, err := a.storage.CreateUser(context.Background(), user)
 	if err != nil {
 		return nil, fmt.Errorf("error while inserting user %v", err)
 	}

@@ -7,6 +7,6 @@ generate-structs:
 PHONY: generate
 generate:
 	mkdir -p pkg/auth_proto_gen
-	protoc --go_out=pkg/auth_v1 --go_opt=paths=source_relative \
-	--go-grpc_out=pkg/auth_v1 --go-grpc_opt=paths=source_relative \
+	protoc --go_out=pkg/auth_proto_gen --go_opt=paths=source_relative \
+	--go-grpc_out=pkg/auth_proto_gen --go-grpc_opt=paths=source_relative \
 	./**/*.proto

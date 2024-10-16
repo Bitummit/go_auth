@@ -19,12 +19,13 @@ func main() {
 
 	log.Info("Connecting database ...")
 
-	storage, err := postgresql.NewDBPool(context.TODO())
+	_, err := postgresql.NewDBPool(context.TODO())
 	if err != nil {
 		log.Error("Error connecting to DB", logger.Err(err))
 	}
-
-	if err := grpc.RunServer(log, storage, cfg); err != nil {
+	// service := new
+	// server := new
+	if err := grpc.RunServer(log, cfg); err != nil {
 		log.Error("Server error! Disconnecting ...")
 	}
 
