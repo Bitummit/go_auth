@@ -1,10 +1,11 @@
 package postgresql
 
 import (
-	"github.com/Bitummit/go_auth/internal/storage"
 	"context"
 	"os"
 	"time"
+
+	"github.com/Bitummit/go_auth/internal/models"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,7 +32,7 @@ func NewDBPool(ctx context.Context) (*Storage, error) {
 }
 
 
-func (s *Storage) CreateUser(ctx context.Context, user storage.User) (int64, error) {
+func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, error) {
 	stmt := `
 		INSERT INTO my_user(username, pass) VALUES(@username, @password) RETURNING id;
 	`
@@ -69,7 +70,7 @@ func (s *Storage) CreateUser(ctx context.Context, user storage.User) (int64, err
 // }
 
 
-func (s *Storage) GetUser(ctx context.Context, username string) (*storage.User, error) {
+func (s *Storage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	stmt := `
 		SELECT * from my_user where username=@username;
 	`
@@ -78,7 +79,7 @@ func (s *Storage) GetUser(ctx context.Context, username string) (*storage.User, 
 		"username": username,
 	}
 
-	var user storage.User
+	var user models.User
 	
 	err := s.DB.QueryRow(ctx, stmt, args).Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {

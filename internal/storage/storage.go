@@ -1,21 +1,13 @@
 package storage
 
-import "context"
+import (
+	"context"
 
-type User struct {
-	Id int64
-	Username string
-	Password []byte
-}
-
-type Token struct {
-	Id int
-	Access_token string
-	Refresh_token string
-}
+	"github.com/Bitummit/go_auth/internal/models"
+)
 
 
 type QueryFunctions interface {
-	CreateUser(context.Context, User) (int64, error)
-	GetUser(context.Context, string) (*User, error)
+	CreateUser(context.Context, models.User) (int64, error)
+	GetUser(context.Context, string) (*models.User, error)
 }

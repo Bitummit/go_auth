@@ -20,7 +20,7 @@ type AuthClient struct {
 }
 
 
-func NewClient(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
+func New(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
 
 	authClient := AuthClient {
 		Cfg: cfg,
@@ -44,8 +44,8 @@ func NewClient(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
 }
 
 
-func (a *AuthClient) CheckToken(token string) (*auth_v1.Response, error) {
-	request := &auth_v1.Token {
+func (a *AuthClient) CheckToken(token string) (*auth_v1.EmptyResponse, error) {
+	request := &auth_v1.CheckTokenRequest {
 		Token: token,
 	}
 	response, err := a.Client.CheckToken(context.Background(), request)
@@ -58,8 +58,8 @@ func (a *AuthClient) CheckToken(token string) (*auth_v1.Response, error) {
 }
 
 
-func (a *AuthClient) Login(username string, password string) (*auth_v1.Token, error) {
-	request := &auth_v1.BaseUserInformation {
+func (a *AuthClient) Login(username string, password string) (*auth_v1.LoginResponse, error) {
+	request := &auth_v1.LoginRequest {
 		Username: username,
 		Password: password,
 	}
@@ -74,9 +74,9 @@ func (a *AuthClient) Login(username string, password string) (*auth_v1.Token, er
 }
 
 
-func (a *AuthClient) Register(username string, password string) (*auth_v1.Token, error) {
+func (a *AuthClient) Register(username string, password string) (*auth_v1.RegistrationResponse, error) {
 
-	request := &auth_v1.BaseUserInformation {
+	request := &auth_v1.RegistrationRequest {
 		Username: username,
 		Password: password,
 	}

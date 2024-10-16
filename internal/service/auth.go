@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Bitummit/go_auth/internal/models"
 	"github.com/Bitummit/go_auth/internal/storage"
 	"github.com/Bitummit/go_auth/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 
-func CheckTokenUserService(queryTool storage.QueryFunctions, token string) (bool, error) {
+func CheckTokenUser(queryTool storage.QueryFunctions, token string) (bool, error) {
 	
 	user, err := utils.ParseToken(token)
 	if err != nil {
@@ -26,7 +27,7 @@ func CheckTokenUserService(queryTool storage.QueryFunctions, token string) (bool
 }
 
 
-func LoginUserService(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
+func LoginUser(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
 	user, err := queryTool.GetUser(context.Background(), username)
 	if err != nil {
 		// return nil, fmt.Errorf("error while fething data %v", err)
@@ -47,13 +48,13 @@ func LoginUserService(queryTool storage.QueryFunctions, username string, passwor
 }
 
 
-func RegisterUserService(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
+func RegisterUser(queryTool storage.QueryFunctions, username string, password string) (*string, error) {
 	
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("error while hashing password %v", err)
 	}
-	user := storage.User{Username: username, Password: hashedPass}
+	user := models.User{Username: username, Password: hashedPass}
 	id, err := queryTool.CreateUser(context.Background(), user)
 	if err != nil {
 		return nil, fmt.Errorf("error while inserting user %v", err)

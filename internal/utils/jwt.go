@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"github.com/Bitummit/go_auth/internal/storage"
 	"errors"
 	"os"
 	"time"
 
+	"github.com/Bitummit/go_auth/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -25,7 +25,7 @@ func (u UserClaims) Valid() error {
 }
 
 
-func NewToken(user storage.User) (string, error) {
+func NewToken(user models.User) (string, error) {
 	duration, err := time.ParseDuration(os.Getenv("TOKEN_TTL"))
 	if err != nil {
 		return "", err
@@ -46,16 +46,16 @@ func NewToken(user storage.User) (string, error) {
 }
 
 
-func ParseToken(tokenString string) (storage.User, error) {
+func ParseToken(tokenString string) (models.User, error) {
 	var userClaims UserClaims
 	_, err := jwt.ParseWithClaims(tokenString, &userClaims, func(token *jwt.Token) (interface{}, error) {
     	return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return storage.User{}, err
+		return models.User{}, err
 	}
 	
-	user := storage.User{
+	user := models.User{
 		Id: userClaims.Id,
 		Username: userClaims.Username,
 	}

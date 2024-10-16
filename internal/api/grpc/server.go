@@ -22,7 +22,7 @@ type AuthServer struct {
 	auth_v1.UnimplementedAuthServer
 }
 
-func StartGrpcServer(log *slog.Logger, storage storage.QueryFunctions, cfg *config.Config) error {
+func RunServer(log *slog.Logger, storage storage.QueryFunctions, cfg *config.Config) error {
 	
 	server := AuthServer {
 		Cfg: cfg,
@@ -48,45 +48,45 @@ func StartGrpcServer(log *slog.Logger, storage storage.QueryFunctions, cfg *conf
 }
 
 
-func (a *AuthServer) CheckToken(ctx context.Context, req *auth_v1.Token) (*auth_v1.Response, error) {
+func (a *AuthServer) CheckToken(ctx context.Context, req *auth_v1.CheckTokenRequest) (*auth_v1.EmptyResponse, error) {
 
-	ok, err := service.CheckTokenUserService(a.Storage, req.GetToken())
+	ok, err := service.CheckTokenUser(a.Storage, req.GetToken())
 	if err != nil || !ok {
 		a.Log.Error("error while login:", logger.Err(err))
 		return nil, fmt.Errorf("error in login: %v", err)
 	}
 
-	response := auth_v1.Response{
-		Status: "OK",
+	response := auth_v1.EmptyResponse{
 	}
+
 	return &response, nil
 }
 
 
-func (a *AuthServer) Login(ctx context.Context, req *auth_v1.BaseUserInformation) (*auth_v1.Token, error) {
+func (a *AuthServer) Login(ctx context.Context, req *auth_v1.LoginRequest) (*auth_v1.LoginResponse, error) {
 
-	token, err := service.LoginUserService(a.Storage, req.GetUsername(), req.GetPassword())
+	token, err := service.LoginUser(a.Storage, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
 		return nil, err
 	}
 
-	response := auth_v1.Token{
+	response := auth_v1.LoginResponse{
 		Token: *token,
 	}
 	return &response, nil
 }
 
 
-func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_v1.BaseUserInformation) (*auth_v1.Token, error)  {
+func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_v1.RegistrationRequest) (*auth_v1.RegistrationResponse, error)  {
 
-	token, err := service.RegisterUserService(a.Storage, req.GetUsername(), req.GetPassword())
+	token, err := service.RegisterUser(a.Storage, req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
 		return nil, fmt.Errorf("error in login: %v", err)
 	}
 
-	response := auth_v1.Token{
+	response := auth_v1.RegistrationResponse{
 		Token: *token,
 	}
 	return &response, nil
