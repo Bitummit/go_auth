@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -16,7 +17,7 @@ type Storage struct {
 	DB *pgxpool.Pool
 }
 
-func NewDBPool(ctx context.Context) (*Storage, error) {
+func New(ctx context.Context) (*Storage, error) {
 	dbPath := os.Getenv("DB_URL")
 
 	ctx, cancel := context.WithTimeout(ctx, 10 * time.Second)
@@ -51,25 +52,6 @@ func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, erro
 }
 
 
-// func (s *Storage) CreateToken(ctx context.Context, token storage.Token) error {
-// 	stmt := `
-// 		INSERT INTO token VALUES(@access_token, @refresh_token)
-// 	`
-
-// 	args := pgx.NamedArgs{
-// 		"access_token": token.Access_token,
-// 		"refresh_token": token.Refresh_token,
-// 	}
-	
-// 	_, err := s.DB.Exec(ctx, stmt, args)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-
 func (s *Storage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	stmt := `
 		SELECT * from my_user where username=@username;
@@ -78,20 +60,12 @@ func (s *Storage) GetUser(ctx context.Context, username string) (*models.User, e
 	args := pgx.NamedArgs{
 		"username": username,
 	}
-
 	var user models.User
 	
 	err := s.DB.QueryRow(ctx, stmt, args).Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("no such user")
 	}
 	
 	return &user, nil
 }
-
-// TODO: create user
-// TODO: create jwt
-// TODO: get tokens(access, refresh)
-// TODO: get user
-// TODO: get all users
-// TODO: 

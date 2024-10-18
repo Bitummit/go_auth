@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	auth_v1 "github.com/Bitummit/go_auth/pkg/auth_v1/proto"
+	auth_gen "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
 	"github.com/Bitummit/go_auth/pkg/logger"
 	"google.golang.org/grpc"
@@ -13,15 +13,13 @@ import (
 )
 
 type AuthClient struct {
-	Client auth_v1.AuthClient
+	Client auth_gen.AuthClient
 	Cfg *config.Config
 	Log *slog.Logger
-	Conn *grpc.ClientConn
 }
 
 
 func New(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
-
 	authClient := AuthClient {
 		Cfg: cfg,
 		Log: log,
@@ -30,22 +28,20 @@ func New(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	
 	conn, err := grpc.NewClient("127.0.0.1:5300", opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	client := auth_v1.NewAuthClient(conn)
+	client := auth_gen.NewAuthClient(conn)
 	authClient.Client = client
-	authClient.Conn = conn
 
 	return &authClient, nil
 }
 
 
-func (a *AuthClient) CheckToken(token string) (*auth_v1.EmptyResponse, error) {
-	request := &auth_v1.CheckTokenRequest {
+func (a *AuthClient) CheckToken(token string) (*auth_gen.EmptyResponse, error) {
+	request := &auth_gen.CheckTokenRequest {
 		Token: token,
 	}
 	response, err := a.Client.CheckToken(context.Background(), request)
@@ -53,13 +49,12 @@ func (a *AuthClient) CheckToken(token string) (*auth_v1.EmptyResponse, error) {
 		a.Log.Error("fail to dial: %v", logger.Err(err))
 		return nil, fmt.Errorf("auth service error: %v", err)
 	}
-	// return response object or string?
 	return response, nil
 }
 
 
-func (a *AuthClient) Login(username string, password string) (*auth_v1.LoginResponse, error) {
-	request := &auth_v1.LoginRequest {
+func (a *AuthClient) Login(username string, password string) (*auth_gen.LoginResponse, error) {
+	request := &auth_gen.LoginRequest {
 		Username: username,
 		Password: password,
 	}
@@ -69,14 +64,12 @@ func (a *AuthClient) Login(username string, password string) (*auth_v1.LoginResp
 		// return nil, fmt.Errorf("auth service error: %v", err)
 		return nil, err
 	}
-	// return Token object or string?
 	return token, nil
 }
 
 
-func (a *AuthClient) Register(username string, password string) (*auth_v1.RegistrationResponse, error) {
-
-	request := &auth_v1.RegistrationRequest {
+func (a *AuthClient) Register(username string, password string) (*auth_gen.RegistrationResponse, error) {
+	request := &auth_gen.RegistrationRequest {
 		Username: username,
 		Password: password,
 	}
@@ -85,6 +78,5 @@ func (a *AuthClient) Register(username string, password string) (*auth_v1.Regist
 		a.Log.Error("fail to dial: %v", logger.Err(err))
 		return nil, fmt.Errorf("auth service error: %v", err)
 	}
-	// return Token object or string?
 	return token, nil
 }

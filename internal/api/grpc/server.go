@@ -4,16 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net"
 
-	"github.com/Bitummit/go_auth/internal/service"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
 	"github.com/Bitummit/go_auth/pkg/logger"
-	"google.golang.org/grpc"
 )
 type Service interface {
-	CheckTokenUser(string) (bool, error)
+	CheckTokenUser(string) error
 	LoginUser(string, string) (*string, error)
 	RegisterUser(string, string) (*string, error)
 }
@@ -25,44 +22,23 @@ type AuthServer struct {
 	auth_proto.UnimplementedAuthServer
 }
 
-func RunServer(log *slog.Logger, service Service, cfg *config.Config) error {
-	
-	server := AuthServer {
+func New(log *slog.Logger, cfg *config.Config, service Service) *AuthServer {
+	return &AuthServer{
 		Cfg: cfg,
 		Log: log,
 		Service: service,
 	}
-	server.Log.Info("starting server ...")
-	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
-    if err != nil {
-        server.Log.Error("failed to listen", logger.Err(err))
-    }
-	// ------- This to main ----------
-    opts := []grpc.ServerOption{}
-    grpcServer := grpc.NewServer(opts...)
-
-	auth_proto.RegisterAuthServer(grpcServer, &server)
-    if err = grpcServer.Serve(listener); err != nil {
-		server.Log.Error("error starting server", logger.Err(err))
-		return err
-	}
-	server.Log.Info("server stopped")
-	return nil
-	// ------- This to main ----------
 }
 
 
 func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenRequest) (*auth_proto.EmptyResponse, error) {
 
-	ok, err := a.Service.CheckTokenUser(req.GetToken())
-	if err != nil || !ok {
+	if err := a.Service.CheckTokenUser(req.GetToken()); err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
 		return nil, fmt.Errorf("error in login: %v", err)
 	}
 
-	response := auth_proto.EmptyResponse{
-	}
-
+	response := auth_proto.EmptyResponse{}
 	return &response, nil
 }
 

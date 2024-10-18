@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -28,7 +29,7 @@ func (u UserClaims) Valid() error {
 func NewToken(user models.User) (string, error) {
 	duration, err := time.ParseDuration(os.Getenv("TOKEN_TTL"))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid token duration %w", err)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
@@ -39,7 +40,7 @@ func NewToken(user models.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("error while signing token %w", err)
 	}
 
 	return tokenString, err
@@ -52,7 +53,7 @@ func ParseToken(tokenString string) (models.User, error) {
     	return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, fmt.Errorf("invalid token %w", err)
 	}
 	
 	user := models.User{
