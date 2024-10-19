@@ -2,12 +2,16 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
+	"github.com/Bitummit/go_auth/internal/my_errors"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
 	"github.com/Bitummit/go_auth/pkg/logger"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 type Service interface {
 	CheckTokenUser(string) error
@@ -32,10 +36,14 @@ func New(log *slog.Logger, cfg *config.Config, service Service) *AuthServer {
 
 
 func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenRequest) (*auth_proto.EmptyResponse, error) {
-
+	// Тут возвращать текст ошибки юзеру, а ниже можно подробнее
 	if err := a.Service.CheckTokenUser(req.GetToken()); err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
-		return nil, fmt.Errorf("error in login: %v", err)
+		if errors.Is(err, my_errors.ErrorTokenDuration) || errors.Is(err, my_errors.ErrorNotFound){
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("%v", err))
+		} else {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
+		}
 	}
 
 	response := auth_proto.EmptyResponse{}

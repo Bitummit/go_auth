@@ -30,7 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 	log.Info("Connecting database SUCCESS")
-	service := service.New(storage)
+	service := service.New(storage, log)
 
 	log.Info("starting server ...")
 	server := my_grpc.New(log, cfg, service)

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Bitummit/go_auth/internal/models"
+	"github.com/Bitummit/go_auth/internal/my_errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -45,7 +46,8 @@ func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, erro
 	var id int64
 	err := s.DB.QueryRow(ctx, stmt, args).Scan(&id)
 	if err != nil {
-		return 0, err
+		// if errors.Is(err, pgx.ErrNoRows)
+		return 0, my_errors.ErrorUserExists
 	}
 
 	return id, nil
@@ -64,7 +66,7 @@ func (s *Storage) GetUser(ctx context.Context, username string) (*models.User, e
 	
 	err := s.DB.QueryRow(ctx, stmt, args).Scan(&user.Id, &user.Username, &user.Password)
 	if err != nil {
-		return nil, fmt.Errorf("no such user")
+		return nil, fmt.Errorf("user not found %w", my_errors.ErrorNotFound)
 	}
 	
 	return &user, nil

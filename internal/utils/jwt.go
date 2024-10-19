@@ -2,11 +2,11 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"time"
 
 	"github.com/Bitummit/go_auth/internal/models"
+	"github.com/Bitummit/go_auth/internal/my_errors"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -29,7 +29,7 @@ func (u UserClaims) Valid() error {
 func NewToken(user models.User) (string, error) {
 	duration, err := time.ParseDuration(os.Getenv("TOKEN_TTL"))
 	if err != nil {
-		return "", fmt.Errorf("invalid token duration %w", err)
+		return "", my_errors.ErrorTokenDuration
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
@@ -40,7 +40,7 @@ func NewToken(user models.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		return "", fmt.Errorf("error while signing token %w", err)
+		return "", my_errors.ErrorSigningToken
 	}
 
 	return tokenString, err
@@ -53,7 +53,7 @@ func ParseToken(tokenString string) (models.User, error) {
     	return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return models.User{}, fmt.Errorf("invalid token %w", err)
+		return models.User{}, my_errors.ErrorInvalidToken
 	}
 	
 	user := models.User{
