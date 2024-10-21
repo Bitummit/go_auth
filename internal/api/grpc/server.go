@@ -40,10 +40,9 @@ func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenR
 	if err := a.Service.CheckTokenUser(req.GetToken()); err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
 		if errors.Is(err, my_errors.ErrorTokenDuration) || errors.Is(err, my_errors.ErrorNotFound){
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("%v", err))
-		} else {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
+			return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
 	}
 
 	response := auth_proto.EmptyResponse{}
@@ -56,7 +55,10 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 	token, err := a.Service.LoginUser(req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
-		return nil, err
+		if errors.Is(err, my_errors.ErrorNotFound) || errors.Is(err, my_errors.ErrorHashingPassword){
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
 	}
 	response := auth_proto.LoginResponse{
 		Token: *token,
@@ -70,7 +72,10 @@ func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_proto.Registra
 	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
-		return nil, fmt.Errorf("error in login: %v", err)
+		if errors.Is(err, my_errors.ErrorUserExists) || errors.Is(err, my_errors.ErrorHashingPassword){
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
 	}
 
 	response := auth_proto.RegistrationResponse{
