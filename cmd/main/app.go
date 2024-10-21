@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"net"
-	"os"
+	"os/signal"
+	// "sync"
+	"syscall"
 
 	my_grpc "github.com/Bitummit/go_auth/internal/api/grpc"
 	"github.com/Bitummit/go_auth/internal/service"
@@ -16,36 +18,55 @@ import (
 
 
 func main() {
-	ctx, cancel  := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop  := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	// wg := &sync.WaitGroup{}
 
 	cfg := config.InitConfig()
 	log := logger.NewLogger()
 	log.Info("Initializing config success")
 
 	log.Info("Connecting database ...")
+	// wg.Add(1)
 	storage, err := postgresql.New(ctx)
 	if err != nil {
 		log.Error("Error connecting to DB", logger.Err(err))
-		os.Exit(1)
+		ctx.Done()
 	}
 	log.Info("Connecting database SUCCESS")
 	service := service.New(storage, log)
 
 	log.Info("starting server ...")
+	// wg.Add(1)
 	server := my_grpc.New(log, cfg, service)
-	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
-    if err != nil {
-        server.Log.Error("failed to listen", logger.Err(err))
-		
-    }
-    opts := []grpc.ServerOption{}
-    grpcServer := grpc.NewServer(opts...)
-	auth_proto.RegisterAuthServer(grpcServer, server)
+	startServer(ctx, server)
+}
+
+
+func startServer(ctx context.Context, server *my_grpc.AuthServer) {
 	
-    if err = grpcServer.Serve(listener); err != nil {
-		server.Log.Error("error starting server", logger.Err(err))
-		os.Exit(1)
+	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
+	if err != nil {
+		server.Log.Error("failed to listen", logger.Err(err))
+		ctx.Done()
 	}
+	opts := []grpc.ServerOption{}
+	grpcServer := grpc.NewServer(opts...)
+	auth_proto.RegisterAuthServer(grpcServer, server)
+
+	go func() {
+		if err = grpcServer.Serve(listener); err != nil {
+			// defer wg.Done()
+			server.Log.Error("error starting server", logger.Err(err))
+		}
+	}()
+	// wg.Wait()
+	<-ctx.Done()
+	grpcServer.GracefulStop()
+
+	server.Log.Info("Services stopped")
+}
+
+func startDB() {
 
 }
