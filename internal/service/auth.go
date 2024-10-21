@@ -18,21 +18,16 @@ type UserStorage interface {
 }
 
 type AuthService struct {
-	storage UserStorage
+	Storage UserStorage
 	log *slog.Logger
 }
 
 func New(storage UserStorage, log *slog.Logger) *AuthService {
 	return &AuthService{
-		storage: storage,
+		Storage: storage,
 		log: log,
 	}
 }
-
-// TODO: переписать все ошибки на серверный слой
-// Отсюда возвращать кастомную ошибку с %w чтобы сравнить ее в серверном слое
-// Пробрасываем ошибку с самого низа
-
 
 func (a *AuthService)CheckTokenUser(token string) error {
 	user, err := utils.ParseToken(token)
@@ -40,17 +35,16 @@ func (a *AuthService)CheckTokenUser(token string) error {
 		return err
 	}
 	
-	_, err = a.storage.GetUser(context.Background(), user.Username)
+	_, err = a.Storage.GetUser(context.Background(), user.Username)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 
 func (a *AuthService)LoginUser(username string, password string) (*string, error) {
-	user, err := a.storage.GetUser(context.Background(), username)
+	user, err := a.Storage.GetUser(context.Background(), username)
 	if err != nil {
 		// return nil, fmt.Errorf("error while fething data %v", err)
 		a.log.Error("Getting user error: ", logger.Err(err))
@@ -82,7 +76,7 @@ func (a *AuthService)RegisterUser(username string, password string) (*string, er
 	}
 
 	user := models.User{Username: username, Password: hashedPass}
-	id, err := a.storage.CreateUser(context.Background(), user)
+	id, err := a.Storage.CreateUser(context.Background(), user)
 	if err != nil {
 		a.log.Error("User creation error: ", logger.Err(err))
 		return nil, err

@@ -23,10 +23,14 @@ func New(ctx context.Context) (*Storage, error) {
 
 	ctx, cancel := context.WithTimeout(ctx, 10 * time.Second)
 	defer cancel()
-
+	
 	dbConn, err := pgxpool.New(ctx, dbPath)
-
+	// defer dbConn.Close()
 	if err != nil {
+		return nil, err
+	}
+
+	if err := dbConn.Ping(ctx); err != nil {
 		return nil, err
 	}
 

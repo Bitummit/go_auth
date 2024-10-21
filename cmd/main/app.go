@@ -5,6 +5,7 @@ import (
 	"net"
 	"os/signal"
 	// "sync"
+
 	"syscall"
 
 	my_grpc "github.com/Bitummit/go_auth/internal/api/grpc"
@@ -21,17 +22,18 @@ func main() {
 	ctx, stop  := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	// wg := &sync.WaitGroup{}
-
+	// wg.Add(1)
 	cfg := config.InitConfig()
 	log := logger.NewLogger()
 	log.Info("Initializing config success")
 
 	log.Info("Connecting database ...")
-	// wg.Add(1)
+	
 	storage, err := postgresql.New(ctx)
+
 	if err != nil {
 		log.Error("Error connecting to DB", logger.Err(err))
-		ctx.Done()
+		return
 	}
 	log.Info("Connecting database SUCCESS")
 	service := service.New(storage, log)
@@ -39,7 +41,11 @@ func main() {
 	log.Info("starting server ...")
 	// wg.Add(1)
 	server := my_grpc.New(log, cfg, service)
-	startServer(ctx, server)
+	go startServer(ctx, server) 
+
+	<-ctx.Done()
+	storage.DB.Close()
+	log.Info("Database stopped")
 }
 
 
@@ -48,7 +54,6 @@ func startServer(ctx context.Context, server *my_grpc.AuthServer) {
 	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
 	if err != nil {
 		server.Log.Error("failed to listen", logger.Err(err))
-		ctx.Done()
 	}
 	opts := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(opts...)
@@ -56,17 +61,10 @@ func startServer(ctx context.Context, server *my_grpc.AuthServer) {
 
 	go func() {
 		if err = grpcServer.Serve(listener); err != nil {
-			// defer wg.Done()
 			server.Log.Error("error starting server", logger.Err(err))
 		}
 	}()
-	// wg.Wait()
 	<-ctx.Done()
 	grpcServer.GracefulStop()
-
-	server.Log.Info("Services stopped")
-}
-
-func startDB() {
-
+	server.Log.Info("Server stopped")
 }
