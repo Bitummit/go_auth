@@ -5,7 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/Bitummit/go_auth/internal/models"
-	"github.com/Bitummit/go_auth/internal/my_errors"
+	"github.com/Bitummit/go_auth/pkg/my_errors"
 	"github.com/Bitummit/go_auth/internal/utils"
 	"github.com/Bitummit/go_auth/pkg/logger"
 	"golang.org/x/crypto/bcrypt"

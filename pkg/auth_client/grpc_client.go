@@ -58,13 +58,13 @@ func (a *AuthClient) Login(username string, password string) (*auth_gen.LoginRes
 		Username: username,
 		Password: password,
 	}
-	token, err := a.Client.Login(context.Background(), request)
+	response, err := a.Client.Login(context.Background(), request)
 	if err != nil {
 		a.Log.Error("fail to dial: %v", logger.Err(err))
 		// return nil, fmt.Errorf("auth service error: %v", err)
 		return nil, err
 	}
-	return token, nil
+	return response, nil
 }
 
 

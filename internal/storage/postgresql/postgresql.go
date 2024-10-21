@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Bitummit/go_auth/internal/models"
-	"github.com/Bitummit/go_auth/internal/my_errors"
+	"github.com/Bitummit/go_auth/pkg/my_errors"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

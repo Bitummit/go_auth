@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/Bitummit/go_auth/internal/my_errors"
+	"github.com/Bitummit/go_auth/pkg/my_errors"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
 	"github.com/Bitummit/go_auth/pkg/logger"
@@ -58,7 +58,6 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 		a.Log.Error("error while login:", logger.Err(err))
 		return nil, err
 	}
-
 	response := auth_proto.LoginResponse{
 		Token: *token,
 	}
