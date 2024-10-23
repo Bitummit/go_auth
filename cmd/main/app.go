@@ -41,15 +41,17 @@ func main() {
 	log.Info("starting server ...")
 	// wg.Add(1)
 	server := my_grpc.New(log, cfg, service)
-	go startServer(ctx, server) 
+	grpcServer := startServer(ctx, server) 
 
 	<-ctx.Done()
+	grpcServer.GracefulStop()
+	server.Log.Info("Server stopped")
 	storage.DB.Close()
 	log.Info("Database stopped")
 }
 
 
-func startServer(ctx context.Context, server *my_grpc.AuthServer) {
+func startServer(ctx context.Context, server *my_grpc.AuthServer) *grpc.Server{
 	
 	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
 	if err != nil {
@@ -64,7 +66,6 @@ func startServer(ctx context.Context, server *my_grpc.AuthServer) {
 			server.Log.Error("error starting server", logger.Err(err))
 		}
 	}()
-	<-ctx.Done()
-	grpcServer.GracefulStop()
-	server.Log.Info("Server stopped")
+	return grpcServer
+	
 }
