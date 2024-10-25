@@ -2,43 +2,48 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/Bitummit/go_auth/internal/models"
-	"github.com/Bitummit/go_auth/pkg/my_errors"
 	"github.com/Bitummit/go_auth/internal/utils"
-	"github.com/Bitummit/go_auth/pkg/logger"
 	"golang.org/x/crypto/bcrypt"
 )
 
 
-type UserStorage interface {
-	CreateUser(context.Context, models.User) (int64, error)
-	GetUser(context.Context, string) (*models.User, error)
-}
+type( 
+	AuthService struct {
+		Storage UserStorage
+	}
 
-type AuthService struct {
-	Storage UserStorage
-	log *slog.Logger
-}
+	UserStorage interface {
+		CreateUser(context.Context, models.User) (int64, error)
+		GetUser(context.Context, string) (*models.User, error)
+	}
+)
+
+var ErrorWrongPassword = errors.New("wrong password")
+var ErrorHashingPassword = errors.New("error while hashing password")
+
 
 func New(storage UserStorage, log *slog.Logger) *AuthService {
 	return &AuthService{
 		Storage: storage,
-		log: log,
 	}
 }
 
 func (a *AuthService)CheckTokenUser(token string) error {
 	user, err := utils.ParseToken(token)
 	if err != nil {
-		return err
+		return fmt.Errorf("check user token: %w", err)
 	}
 	
 	_, err = a.Storage.GetUser(context.Background(), user.Username)
 	if err != nil {
-		return err
+		return fmt.Errorf("check user token: %w", err)
 	}
+
 	return nil
 }
 
@@ -46,23 +51,18 @@ func (a *AuthService)CheckTokenUser(token string) error {
 func (a *AuthService)LoginUser(username string, password string) (*string, error) {
 	user, err := a.Storage.GetUser(context.Background(), username)
 	if err != nil {
-		// return nil, fmt.Errorf("error while fething data %v", err)
-		a.log.Error("Getting user error: ", logger.Err(err))
-		return nil, err
+		return nil, fmt.Errorf("login user: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password)); if err != nil {
-		// return nil, fmt.Errorf("wrong password %v", err)
-		a.log.Error("Compare hash error: ", logger.Err(err))
-		return nil, my_errors.ErrorWrongPassword
+		return nil, fmt.Errorf("login user: %w", err)
 	}
 
 	token, err := utils.NewToken(*user)
 	if err != nil {
-		// return nil, fmt.Errorf("error while generating token %v", err)
-		a.log.Error("Generating token: ", logger.Err(err))
-		return nil, err
+		return nil, fmt.Errorf("login user: %w", err)
 	}
+
 	return &token, nil
 }
 
@@ -70,22 +70,19 @@ func (a *AuthService)LoginUser(username string, password string) (*string, error
 func (a *AuthService)RegisterUser(username string, password string) (*string, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		a.log.Error("Hashing error: ", logger.Err(err))
-		return nil, my_errors.ErrorHashingPassword
-		// fmt.Errorf("error while hashing password %v", err)
+		return nil, fmt.Errorf("generating password: %w", ErrorHashingPassword)
 	}
 
 	user := models.User{Username: username, Password: hashedPass}
 	id, err := a.Storage.CreateUser(context.Background(), user)
 	if err != nil {
-		a.log.Error("User creation error: ", logger.Err(err))
-		return nil, err
+		return nil, fmt.Errorf("registration user: %w", err)
 	}
+
 	user.Id = id
 	token, err := utils.NewToken(user)
 	if err != nil {
-		a.log.Error("Generating token error: ", logger.Err(err))
-		return nil, err
+		return nil, fmt.Errorf("registration user: %w", err)
 	}
 
 	return &token, nil

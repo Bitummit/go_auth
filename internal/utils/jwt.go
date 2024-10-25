@@ -2,14 +2,13 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/Bitummit/go_auth/internal/models"
-	"github.com/Bitummit/go_auth/pkg/my_errors"
 	"github.com/golang-jwt/jwt/v4"
 )
-
 
 
 type UserClaims struct {
@@ -18,18 +17,23 @@ type UserClaims struct {
 	ExpiresAt int64
 }
 
+var ErrorInvalidToken = errors.New("invalid token")
+var ErrorTokenDuration = errors.New("invalid token duration")
+var ErrorSigningToken = errors.New("token signing error")
+var ErrorTokenExpired = errors.New("token expired")
+
+
 func (u UserClaims) Valid() error {
 	if u.ExpiresAt < time.Now().Unix() {
-		return errors.New("token expired")
+		return fmt.Errorf("inavalid token: %w", ErrorTokenExpired)
 	}
 	return nil
 }
 
-
 func NewToken(user models.User) (string, error) {
 	duration, err := time.ParseDuration(os.Getenv("TOKEN_TTL"))
 	if err != nil {
-		return "", my_errors.ErrorTokenDuration
+		return "", fmt.Errorf("creating token: %w", ErrorTokenDuration)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, UserClaims{
@@ -40,12 +44,11 @@ func NewToken(user models.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		return "", my_errors.ErrorSigningToken
+		return "", fmt.Errorf("creating token: %w", ErrorSigningToken)
 	}
 
-	return tokenString, err
+	return tokenString, nil
 }
-
 
 func ParseToken(tokenString string) (models.User, error) {
 	var userClaims UserClaims
@@ -53,7 +56,7 @@ func ParseToken(tokenString string) (models.User, error) {
     	return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return models.User{}, my_errors.ErrorInvalidToken
+		return models.User{}, fmt.Errorf("parsing token: %w", ErrorInvalidToken)
 	}
 	
 	user := models.User{
@@ -62,8 +65,6 @@ func ParseToken(tokenString string) (models.User, error) {
 	}
 
 	return user, nil
-
 }
-
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6MSwiVXNlcm5hbWUiOiJQZXJ0YXlhIiwiRXhwaXJlc0F0IjoxNzI4MzgzMzc5fQ.N1Vnsx0GHL6azLXeVfZwi3ik7W3dpBeTeKgv3nWlgkM

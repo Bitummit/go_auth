@@ -1,19 +1,11 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/IBM/sarama"
 )
 
-// type KafkaService struct {
-// 	log *slog.Logger
-// }
-
-
-// func NewKafka(log *slog.Logger) KafkaService {
-// 	return KafkaService{
-// 		log: log,
-// 	}
-// }
 
 type Service struct {
 	consumer sarama.Consumer
@@ -23,13 +15,15 @@ type Service struct {
 
 func New() (*Service, error){
 	brokers := []string {"localhost:9092"}
+
 	producer, err := ConnectProducer(brokers)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connecting producer: %w", err)
 	}
+
 	consumer, err := ConnectConsumer(brokers)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connecting consumer: %w", err)
 	}
 
 	return &Service{
@@ -68,7 +62,7 @@ func (k *Service)PushUserToQueue(topic string, message []byte) error {
 	// Send message
 	_, _, err := k.producer.SendMessage(msg)
 	if err != nil {
-		return err
+		return fmt.Errorf("sending message: %w", err)
 	}
 
 	return nil
