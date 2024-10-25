@@ -8,10 +8,10 @@ import (
 
 	"github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
+	"github.com/Bitummit/go_auth/internal/utils"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
 	"github.com/Bitummit/go_auth/pkg/logger"
-	"github.com/Bitummit/go_auth/pkg/my_errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -45,7 +45,7 @@ func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenR
 	// Тут возвращать текст ошибки юзеру, а ниже можно подробнее
 	if err := a.Service.CheckTokenUser(req.GetToken()); err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
-		if errors.Is(err, my_errors.ErrorTokenDuration) || errors.Is(err, postgresql.ErrorNotFound){
+		if errors.Is(err, utils.ErrorTokenDuration) || errors.Is(err, postgresql.ErrorNotFound){
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 			return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
