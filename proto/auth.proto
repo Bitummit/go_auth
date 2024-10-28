@@ -17,7 +17,8 @@ message LoginRequest {
 
 message RegistrationRequest {
     string username = 1 [ json_name = "username" ];
-    string password = 2 [ json_name = "password" ];
+    string email = 2 [ json_name = "email" ];
+    string password = 3 [ json_name = "password" ];
 }
 
 message LoginResponse {

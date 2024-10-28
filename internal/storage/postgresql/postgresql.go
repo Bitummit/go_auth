@@ -46,6 +46,7 @@ func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, erro
 	args := pgx.NamedArgs{
 		"username": user.Username,
 		"password": user.Password,
+		"email": user.Email,
 	}
 
 	var id int64

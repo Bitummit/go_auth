@@ -67,7 +67,7 @@ func (a *AuthService) LoginUser(username string, password string) (*string, erro
 }
 
 
-func (a *AuthService) RegisterUser(username string, password string) (*string, error) {
+func (a *AuthService) RegisterUser(username, email, password string) (*string, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("generating password: %w", ErrorHashingPassword)

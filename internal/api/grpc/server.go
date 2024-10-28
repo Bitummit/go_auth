@@ -28,7 +28,7 @@ type (
 	Service interface {
 		CheckTokenUser(token string) error
 		LoginUser(username string, password string) (*string, error)
-		RegisterUser(username string, password string) (*string, error)
+		RegisterUser(username string, email string, password string) (*string, error)
 	}
 )
 
@@ -72,7 +72,7 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 }
 
 func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_proto.RegistrationRequest) (*auth_proto.RegistrationResponse, error)  {
-	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetPassword())
+	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetEmail(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
 		if errors.Is(err, postgresql.ErrorUserExists) || errors.Is(err, auth.ErrorHashingPassword){
