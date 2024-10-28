@@ -1,4 +1,4 @@
-package service
+package auth
 
 import (
 	"context"
@@ -18,8 +18,8 @@ type(
 	}
 
 	UserStorage interface {
-		CreateUser(context.Context, models.User) (int64, error)
-		GetUser(context.Context, string) (*models.User, error)
+		CreateUser(ctx context.Context, user models.User) (int64, error)
+		GetUser(ctx context.Context, username string) (*models.User, error)
 	}
 )
 
@@ -33,7 +33,7 @@ func New(storage UserStorage, log *slog.Logger) *AuthService {
 	}
 }
 
-func (a *AuthService)CheckTokenUser(token string) error {
+func (a *AuthService) CheckTokenUser(token string) error {
 	user, err := utils.ParseToken(token)
 	if err != nil {
 		return fmt.Errorf("check user token: %w", err)
@@ -48,7 +48,7 @@ func (a *AuthService)CheckTokenUser(token string) error {
 }
 
 
-func (a *AuthService)LoginUser(username string, password string) (*string, error) {
+func (a *AuthService) LoginUser(username string, password string) (*string, error) {
 	user, err := a.Storage.GetUser(context.Background(), username)
 	if err != nil {
 		return nil, fmt.Errorf("login user: %w", err)
@@ -67,7 +67,7 @@ func (a *AuthService)LoginUser(username string, password string) (*string, error
 }
 
 
-func (a *AuthService)RegisterUser(username string, password string) (*string, error) {
+func (a *AuthService) RegisterUser(username string, password string) (*string, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("generating password: %w", ErrorHashingPassword)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/Bitummit/go_auth/internal/service"
+	auth "github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
 	"github.com/Bitummit/go_auth/internal/utils"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
@@ -26,9 +26,9 @@ type (
 	}
 
 	Service interface {
-		CheckTokenUser(string) error
-		LoginUser(string, string) (*string, error)
-		RegisterUser(string, string) (*string, error)
+		CheckTokenUser(token string) error
+		LoginUser(username string, password string) (*string, error)
+		RegisterUser(username string, password string) (*string, error)
 	}
 )
 
@@ -59,7 +59,7 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 	token, err := a.Service.LoginUser(req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
-		if errors.Is(err, postgresql.ErrorNotFound) || errors.Is(err, service.ErrorHashingPassword){
+		if errors.Is(err, postgresql.ErrorNotFound) || errors.Is(err, auth.ErrorHashingPassword){
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 		return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
@@ -75,7 +75,7 @@ func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_proto.Registra
 	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
-		if errors.Is(err, postgresql.ErrorUserExists) || errors.Is(err, service.ErrorHashingPassword){
+		if errors.Is(err, postgresql.ErrorUserExists) || errors.Is(err, auth.ErrorHashingPassword){
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 		return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))

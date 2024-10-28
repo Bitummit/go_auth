@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	my_grpc "github.com/Bitummit/go_auth/internal/api/grpc"
-	"github.com/Bitummit/go_auth/internal/service"
+	auth "github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
 	"github.com/Bitummit/go_auth/pkg/config"
@@ -37,7 +37,7 @@ func Run() {
 	}
 	log.Info("Connecting database SUCCESS")
 	
-	service := service.New(storage, log)
+	service := auth.New(storage, log)
 	log.Info("starting server ...")
 	wg.Add(1)
 	server := my_grpc.New(log, cfg, service)
