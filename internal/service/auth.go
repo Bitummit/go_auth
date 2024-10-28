@@ -67,23 +67,23 @@ func (a *AuthService) LoginUser(username string, password string) (*string, erro
 }
 
 
-func (a *AuthService) RegisterUser(username, email, password string) (*string, error) {
+func (a *AuthService) RegisterUser(username, email, password string) (string, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("generating password: %w", ErrorHashingPassword)
+		return "", fmt.Errorf("generating password: %w", ErrorHashingPassword)
 	}
 
-	user := models.User{Username: username, Password: hashedPass}
+	user := models.User{Username: username, Email: email, Password: hashedPass}
 	id, err := a.Storage.CreateUser(context.Background(), user)
 	if err != nil {
-		return nil, fmt.Errorf("registration user: %w", err)
+		return "", fmt.Errorf("registration user: %w", err)
 	}
 
 	user.Id = id
 	token, err := utils.NewToken(user)
 	if err != nil {
-		return nil, fmt.Errorf("registration user: %w", err)
+		return "", fmt.Errorf("registration user: %w", err)
 	}
 
-	return &token, nil
+	return token, nil
 }

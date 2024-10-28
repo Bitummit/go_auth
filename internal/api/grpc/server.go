@@ -30,7 +30,7 @@ type (
 	Service interface {
 		CheckTokenUser(token string) error
 		LoginUser(username string, password string) (*string, error)
-		RegisterUser(username string, email string, password string) (*string, error)
+		RegisterUser(username string, email string, password string) (string, error)
 	}
 )
 
@@ -74,7 +74,7 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 	return &response, nil
 }
 
-func (a *AuthServer) RegisterUser(ctx context.Context, req *auth_proto.RegistrationRequest) (*auth_proto.RegistrationResponse, error)  {
+func (a *AuthServer) Register(ctx context.Context, req *auth_proto.RegistrationRequest) (*auth_proto.RegistrationResponse, error)  {
 	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetEmail(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
@@ -85,7 +85,7 @@ func (a *AuthServer) RegisterUser(ctx context.Context, req *auth_proto.Registrat
 	}
 	a.Kafka.PushEmailToQueue(ctx, "registration", req.GetEmail())
 	response := auth_proto.RegistrationResponse{
-		Token: *token,
+		Token: token,
 	}
 	return &response, nil
 }

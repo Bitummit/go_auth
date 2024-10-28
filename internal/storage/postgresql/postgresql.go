@@ -41,7 +41,7 @@ func New(ctx context.Context) (*Storage, error) {
 
 func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, error) {
 	stmt := `
-		INSERT INTO my_user(username, pass) VALUES(@username, @password) RETURNING id;
+		INSERT INTO my_user(username, email, pass) VALUES(@username, @email, @password) RETURNING id;
 	`
 	args := pgx.NamedArgs{
 		"username": user.Username,

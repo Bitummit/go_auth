@@ -34,8 +34,8 @@ func New(ctx context.Context, leaderAddress, topic string, partition int, broker
 func (k *Kafka) InitProducer() {
 	w := &kafka.Writer{
 		Addr:     kafka.TCP(k.Brokers...),
-		Topic:   k.Topic,
-		Balancer: &kafka.LeastBytes{},
+		Topic:   "emails",
+		// Balancer: &kafka.LeastBytes{},
 	}
 
 	k.Writer = w
@@ -46,6 +46,7 @@ func (k *Kafka) PushEmailToQueue(ctx context.Context, key string, value string) 
 		kafka.Message{
 			Key:   []byte(key),
 			Value: []byte(value),
+			Topic: k.Topic,
 		},
 	)
 	if err != nil {

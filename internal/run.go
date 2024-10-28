@@ -43,6 +43,7 @@ func Run() {
 	if err != nil {
 		log.Error("starting kafka", err)
 	}
+	kafkaServer.InitProducer()
 
 	service := auth.New(storage, log)
 	log.Info("starting server ...")
@@ -52,6 +53,7 @@ func Run() {
 
 	<-ctx.Done()
 	kafkaServer.Conn.Close()
+	kafkaServer.Writer.Close()
 	log.Info("Kafka stopped")
 	wg.Wait()
 	storage.DB.Close()
