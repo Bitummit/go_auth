@@ -1,68 +1,56 @@
-package kafka
+package my_kafka
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/IBM/sarama"
+	"github.com/segmentio/kafka-go"
+	"golang.org/x/net/context"
 )
 
-
-type Service struct {
-	consumer sarama.Consumer
-	producer sarama.SyncProducer
+type Kafka struct {
+	Conn *kafka.Conn
+	Brokers []string
+	Topic string
+	Writer *kafka.Writer
 }
 
 
-func New() (*Service, error){
-	brokers := []string {"localhost:9092"}
-
-	producer, err := ConnectProducer(brokers)
+func New(ctx context.Context, leaderAddress, topic string, partition int, brokers []string) (*Kafka, error){
+	conn, err := kafka.DialLeader(ctx, "tcp", leaderAddress, topic, partition)
 	if err != nil {
-		return nil, fmt.Errorf("connecting producer: %w", err)
+		return nil, fmt.Errorf("failed to dial leader: %w", err)
 	}
+	conn.SetReadDeadline(time.Now().Add(10*time.Second))
 
-	consumer, err := ConnectConsumer(brokers)
-	if err != nil {
-		return nil, fmt.Errorf("connecting consumer: %w", err)
-	}
-
-	return &Service{
-		consumer: consumer,
-		producer: producer,
-	}, nil
-}
-
-func ConnectProducer(brokers []string) (sarama.SyncProducer, error) {
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 5
-
-	return sarama.NewSyncProducer(brokers, config)
-}
-
-
-func ConnectConsumer(brokers []string) (sarama.Consumer, error) {
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
-
-	return sarama.NewConsumer(brokers, config)
-}
-
-
-func (k *Service)PushUserToQueue(topic string, message []byte) error {
-	defer k.producer.Close()
-
-	// New message
-	msg := &sarama.ProducerMessage{
+	return &Kafka{
+		Conn: conn,
+		Brokers: brokers,
 		Topic: topic,
-		Value: sarama.StringEncoder(message),
+	}, nil
+
+}
+
+func (k *Kafka) InitProducer() {
+	w := &kafka.Writer{
+		Addr:     kafka.TCP(k.Brokers...),
+		Topic:   k.Topic,
+		Balancer: &kafka.LeastBytes{},
 	}
 
-	// Send message
-	_, _, err := k.producer.SendMessage(msg)
+	k.Writer = w
+}
+
+func (k *Kafka) PushEmailToQueue(ctx context.Context, key string, value string) error {
+	err := k.Writer.WriteMessages(ctx,
+		kafka.Message{
+			Key:   []byte(key),
+			Value: []byte(value),
+		},
+	)
 	if err != nil {
-		return fmt.Errorf("sending message: %w", err)
+		k.Writer.Close()
+		return fmt.Errorf("sending message to queue: %w", err)
 	}
 
 	return nil

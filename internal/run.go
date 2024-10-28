@@ -2,6 +2,7 @@ package run
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os/signal"
 	"sync"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 
 	my_grpc "github.com/Bitummit/go_auth/internal/api/grpc"
+	my_kafka "github.com/Bitummit/go_auth/internal/api/kafka"
 	auth "github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
@@ -37,19 +39,24 @@ func Run() {
 	}
 	log.Info("Connecting database SUCCESS")
 	
+	kafkaServer, err := startKafka(ctx)
+	if err != nil {
+		log.Error("starting kafka", err)
+	}
+
 	service := auth.New(storage, log)
 	log.Info("starting server ...")
 	wg.Add(1)
-	server := my_grpc.New(log, cfg, service)
+	server := my_grpc.New(log, cfg, service, kafkaServer)
 	go startServer(ctx, wg, server) 
 
 	<-ctx.Done()
+	kafkaServer.Conn.Close()
+	log.Info("Kafka stopped")
 	wg.Wait()
 	storage.DB.Close()
 	log.Info("Database stopped")
 }
-
-
 
 func startServer(ctx context.Context, wg *sync.WaitGroup, server *my_grpc.AuthServer) {	
 	listener, err := net.Listen("tcp", server.Cfg.GrpcAddress)
@@ -73,17 +80,10 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, server *my_grpc.AuthSe
 	server.Log.Info("Server stopped")
 }
 
-
-// go func() {
-// 	defer wg.Done()
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			grpcServer.GracefulStop()
-// 		default:
-// 			if err = grpcServer.Serve(listener); err != nil {
-// 				server.Log.Error("error starting server", logger.Err(err))
-// 			}
-// 		}
-// 	}
-// }()
+func startKafka(ctx context.Context) (*my_kafka.Kafka, error){
+	kafkaServer, err := my_kafka.New(ctx, "localhost:9092", "emails", 0, []string{"localshost:9092"})
+	if err != nil {
+		return nil ,fmt.Errorf("connecting to kafka: %v", err)
+	}
+	return kafkaServer, nil
+}

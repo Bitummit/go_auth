@@ -68,9 +68,10 @@ func (a *AuthClient) Login(username string, password string) (*auth_gen.LoginRes
 }
 
 
-func (a *AuthClient) Register(username string, password string) (*auth_gen.RegistrationResponse, error) {
+func (a *AuthClient) Register(username string, email string, password string) (*auth_gen.RegistrationResponse, error) {
 	request := &auth_gen.RegistrationRequest {
 		Username: username,
+		Email: email,
 		Password: password,
 	}
 	token, err := a.Client.Register(context.Background(), request)

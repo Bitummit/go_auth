@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	my_kafka "github.com/Bitummit/go_auth/internal/api/kafka"
 	auth "github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
 	"github.com/Bitummit/go_auth/internal/utils"
@@ -22,6 +23,7 @@ type (
 		Cfg *config.Config
 		Log *slog.Logger
 		Service Service
+		Kafka *my_kafka.Kafka
 		auth_proto.UnimplementedAuthServer
 	}
 
@@ -33,11 +35,12 @@ type (
 )
 
 
-func New(log *slog.Logger, cfg *config.Config, service Service) *AuthServer {
+func New(log *slog.Logger, cfg *config.Config, service Service, kafka *my_kafka.Kafka) *AuthServer {
 	return &AuthServer{
 		Cfg: cfg,
 		Log: log,
 		Service: service,
+		Kafka: kafka,
 	}
 }
 
@@ -71,7 +74,7 @@ func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*
 	return &response, nil
 }
 
-func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_proto.RegistrationRequest) (*auth_proto.RegistrationResponse, error)  {
+func (a *AuthServer) RegisterUser(ctx context.Context, req *auth_proto.RegistrationRequest) (*auth_proto.RegistrationResponse, error)  {
 	token, err := a.Service.RegisterUser(req.GetUsername(), req.GetEmail(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while register user:", logger.Err(err))
@@ -80,7 +83,7 @@ func (a *AuthServer) RegisterUser(lctx context.Context, req *auth_proto.Registra
 		}
 		return nil, status.Error(codes.Internal, fmt.Sprintf("%v", err))
 	}
-
+	a.Kafka.PushEmailToQueue(ctx, "registration", req.GetEmail())
 	response := auth_proto.RegistrationResponse{
 		Token: *token,
 	}
