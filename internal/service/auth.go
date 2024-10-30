@@ -36,7 +36,7 @@ func New(storage UserStorage, log *slog.Logger, kafka *my_kafka.Kafka) *AuthServ
 	}
 }
 
-func (a *AuthService) CheckTokenUser(_ context.Context, token string) error {
+func (a *AuthService) CheckTokenUser(token string) error {
 	user, err := my_jwt.ParseToken(token)
 	if err != nil {
 		return fmt.Errorf("check user token: %w", err)
@@ -51,7 +51,7 @@ func (a *AuthService) CheckTokenUser(_ context.Context, token string) error {
 }
 
 
-func (a *AuthService) LoginUser(_ context.Context, username string, password string) (*string, error) {
+func (a *AuthService) LoginUser(username string, password string) (*string, error) {
 	user, err := a.Storage.GetUser(context.Background(), username)
 	if err != nil {
 		return nil, fmt.Errorf("login user: %w", err)

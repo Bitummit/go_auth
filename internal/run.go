@@ -11,6 +11,7 @@ import (
 
 	my_grpc "github.com/Bitummit/go_auth/internal/api/grpc"
 	my_kafka "github.com/Bitummit/go_auth/internal/api/kafka"
+	"github.com/Bitummit/go_auth/internal/interceptors"
 	auth "github.com/Bitummit/go_auth/internal/service"
 	"github.com/Bitummit/go_auth/internal/storage/postgresql"
 	auth_proto "github.com/Bitummit/go_auth/pkg/auth_proto_gen/proto"
@@ -62,7 +63,11 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, server *my_grpc.AuthSe
 	if err != nil {
 		server.Log.Error("failed to listen", logger.Err(err))
 	}
-	opts := []grpc.ServerOption{}
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(
+			interceptors.UnaryLogRequest(server.Log),
+		),
+	}
 	grpcServer := grpc.NewServer(opts...)
 	auth_proto.RegisterAuthServer(grpcServer, server)
 

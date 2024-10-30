@@ -63,19 +63,19 @@ func (s *Storage) CreateUser(ctx context.Context, user models.User) (int64, erro
 
 func (s *Storage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	stmt := `
-		SELECT * from my_user where username=@username;
+		SELECT username, pass from my_user where username=@username;
 	`
 	args := pgx.NamedArgs{
 		"username": username,
 	}
 
 	var user models.User
-	err := s.DB.QueryRow(ctx, stmt, args).Scan(&user.Id, &user.Username, &user.Password)
+	err := s.DB.QueryRow(ctx, stmt, args).Scan(&user.Username, &user.Password)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("%w", ErrorNotFound)
 		}
-		return nil, fmt.Errorf("query getting user%w", err)
+		return nil, fmt.Errorf("query getting user: %w", err)
 	}
 	
 	return &user, nil

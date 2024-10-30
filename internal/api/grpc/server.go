@@ -26,8 +26,8 @@ type (
 	}
 
 	Service interface {
-		CheckTokenUser(ctx context.Context, token string) error
-		LoginUser(ctx context.Context, username string, password string) (*string, error)
+		CheckTokenUser(token string) error
+		LoginUser(cusername string, password string) (*string, error)
 		RegisterUser(ctx context.Context, username string, email string, password string) (string, error)
 	}
 )
@@ -43,7 +43,7 @@ func New(log *slog.Logger, cfg *config.Config, service Service) *AuthServer {
 
 func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenRequest) (*auth_proto.EmptyResponse, error) {
 	// Тут возвращать текст ошибки юзеру, а ниже можно подробнее
-	if err := a.Service.CheckTokenUser(ctx, req.GetToken()); err != nil {
+	if err := a.Service.CheckTokenUser(req.GetToken()); err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
 		if errors.Is(err, my_jwt.ErrorTokenDuration) || errors.Is(err, postgresql.ErrorNotFound){
 			return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -56,7 +56,7 @@ func (a *AuthServer) CheckToken(ctx context.Context, req *auth_proto.CheckTokenR
 }
 
 func (a *AuthServer) Login(ctx context.Context, req *auth_proto.LoginRequest) (*auth_proto.LoginResponse, error) {
-	token, err := a.Service.LoginUser(ctx, req.GetUsername(), req.GetPassword())
+	token, err := a.Service.LoginUser(req.GetUsername(), req.GetPassword())
 	if err != nil {
 		a.Log.Error("error while login:", logger.Err(err))
 		if errors.Is(err, postgresql.ErrorNotFound) || errors.Is(err, auth.ErrorHashingPassword){
