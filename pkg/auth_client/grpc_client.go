@@ -28,7 +28,7 @@ func New(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	conn, err := grpc.NewClient("127.0.0.1:5300", opts...)
+	conn, err := grpc.NewClient(cfg.GrpcAddress, opts...)
 	if err != nil {
 		return nil, err
 	}

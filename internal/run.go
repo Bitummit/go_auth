@@ -39,13 +39,12 @@ func Run() {
 	
 	kafkaServer, err := startKafka(ctx)
 	if err != nil {
-		log.Error("starting kafka", err)
+		log.Error("starting kafka", logger.Err(err))
 	}
-	kafkaServer.InitProducer()
 
 	wg.Add(1)
 	service := auth.New(storage, log, kafkaServer)
-	log.Info("starting server ...")
+	log.Info("Starting server ...")
 	server := my_grpc.New(log, cfg, service)
 	go startServer(ctx, wg, server) 
 
@@ -84,6 +83,7 @@ func startKafka(ctx context.Context) (*my_kafka.Kafka, error){
 	if err != nil {
 		return nil ,fmt.Errorf("connecting to kafka: %v", err)
 	}
+	kafkaServer.InitProducer()
 
 	return kafkaServer, nil
 }
