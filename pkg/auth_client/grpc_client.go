@@ -39,7 +39,6 @@ func New(log *slog.Logger, cfg *config.Config) (*AuthClient, error) {
 	return &authClient, nil
 }
 
-
 func (a *AuthClient) CheckToken(token string) (*auth_gen.EmptyResponse, error) {
 	request := &auth_gen.CheckTokenRequest {
 		Token: token,
@@ -51,7 +50,6 @@ func (a *AuthClient) CheckToken(token string) (*auth_gen.EmptyResponse, error) {
 	}
 	return response, nil
 }
-
 
 func (a *AuthClient) Login(username string, password string) (*auth_gen.LoginResponse, error) {
 	request := &auth_gen.LoginRequest {
@@ -66,7 +64,6 @@ func (a *AuthClient) Login(username string, password string) (*auth_gen.LoginRes
 	}
 	return response, nil
 }
-
 
 func (a *AuthClient) Register(username string, email string, password string) (*auth_gen.RegistrationResponse, error) {
 	request := &auth_gen.RegistrationRequest {

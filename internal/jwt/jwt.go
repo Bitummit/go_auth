@@ -1,4 +1,4 @@
-package utils
+package my_jwt
 
 import (
 	"errors"
@@ -63,7 +63,6 @@ func ParseToken(tokenString string) (models.User, error) {
 		Id: userClaims.Id,
 		Username: userClaims.Username,
 	}
-
 	return user, nil
 }
 

@@ -10,25 +10,26 @@ import (
 )
 
 
-type Config struct {
-	Env string `yaml:"env" env-default:"dev"`
-	HTTPServer `yaml:"http_server"`
-	GrpcServer `yaml:"grpc_server"`
-}
+type (
+	Config struct {
+		Env string `yaml:"env" env-default:"dev"`
+		HTTPServer `yaml:"http_server"`
+		GrpcServer `yaml:"grpc_server"`
+	}
 
-type HTTPServer struct {
-	HTTPAddress string `yaml:"http_address" env-default:"0.0.0.0:8000"`
-	Timeout time.Duration `yaml:"timeout" env-default:"3s"`
-	Idle_timeout time.Duration `yaml:"idle_timeout" env-default:"40s"`
-}
+	HTTPServer struct {
+		HTTPAddress string `yaml:"http_address" env-default:"0.0.0.0:8000"`
+		Timeout time.Duration `yaml:"timeout" env-default:"3s"`
+		Idle_timeout time.Duration `yaml:"idle_timeout" env-default:"40s"`
+	}
 
 
-type GrpcServer struct {
-	GrpcAddress string `yaml:"grpc_address" env-default:"0.0.0.0:5400"`
-}
+	GrpcServer struct {
+		GrpcAddress string `yaml:"grpc_address" env-default:"0.0.0.0:5400"`
+	}
+)
 
 func InitConfig() *Config{
-	
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file!")
 	}
@@ -48,5 +49,4 @@ func InitConfig() *Config{
 	}
 	
 	return &cfg
-	
 }

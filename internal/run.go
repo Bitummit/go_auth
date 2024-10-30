@@ -24,20 +24,18 @@ func Run() {
 	ctx, stop  := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	wg := &sync.WaitGroup{}
-	// wg.Add(1)
+
 	cfg := config.InitConfig()
 	log := logger.NewLogger()
 	log.Info("Initializing config success")
 
 	log.Info("Connecting database ...")
-	
 	storage, err := postgresql.New(ctx)
-
 	if err != nil {
 		log.Error("Error connecting to DB", logger.Err(err))
 		return
 	}
-	log.Info("Connecting database SUCCESS")
+	log.Info("Connecting database success")
 	
 	kafkaServer, err := startKafka(ctx)
 	if err != nil {
@@ -45,10 +43,10 @@ func Run() {
 	}
 	kafkaServer.InitProducer()
 
-	service := auth.New(storage, log)
-	log.Info("starting server ...")
 	wg.Add(1)
-	server := my_grpc.New(log, cfg, service, kafkaServer)
+	service := auth.New(storage, log, kafkaServer)
+	log.Info("starting server ...")
+	server := my_grpc.New(log, cfg, service)
 	go startServer(ctx, wg, server) 
 
 	<-ctx.Done()
@@ -70,7 +68,6 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, server *my_grpc.AuthSe
 	auth_proto.RegisterAuthServer(grpcServer, server)
 
 	go func() {
-		
 		if err = grpcServer.Serve(listener); err != nil {
 			server.Log.Error("error starting server", logger.Err(err))
 		}
@@ -87,5 +84,6 @@ func startKafka(ctx context.Context) (*my_kafka.Kafka, error){
 	if err != nil {
 		return nil ,fmt.Errorf("connecting to kafka: %v", err)
 	}
+
 	return kafkaServer, nil
 }
