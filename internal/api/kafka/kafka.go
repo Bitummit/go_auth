@@ -11,6 +11,7 @@ import (
 type Kafka struct {
 	Conn *kafka.Conn
 	Brokers []string
+	LeaderAddress string
 	Topic string
 	Writer *kafka.Writer
 }
@@ -26,6 +27,7 @@ func New(ctx context.Context, leaderAddress, topic string, partition int, broker
 	return &Kafka{
 		Conn: conn,
 		Brokers: brokers,
+		LeaderAddress: leaderAddress,
 		Topic: topic,
 	}, nil
 
@@ -33,7 +35,7 @@ func New(ctx context.Context, leaderAddress, topic string, partition int, broker
 
 func (k *Kafka) InitProducer() {
 	w := &kafka.Writer{
-		Addr:     kafka.TCP(k.Brokers...),
+		Addr:     kafka.TCP(k.LeaderAddress),
 		Topic:   "emails",
 		// Balancer: &kafka.LeastBytes{},
 	}
@@ -46,11 +48,9 @@ func (k *Kafka) PushEmailToQueue(ctx context.Context, key string, value string) 
 		kafka.Message{
 			Key:   []byte(key),
 			Value: []byte(value),
-			Topic: k.Topic,
 		},
 	)
 	if err != nil {
-		k.Writer.Close()
 		return fmt.Errorf("sending message to queue: %w", err)
 	}
 

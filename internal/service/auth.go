@@ -88,7 +88,9 @@ func (a *AuthService) RegisterUser(ctx context.Context, username, email, passwor
 		return "", fmt.Errorf("registration user: %w", err)
 	}
 
-	a.Kafka.PushEmailToQueue(ctx, "registration", email)
-
+	err = a.Kafka.PushEmailToQueue(ctx, "registration", email)
+	if err != nil {
+		return "", fmt.Errorf("sending email: %w", err)
+	}
 	return token, nil
 }
